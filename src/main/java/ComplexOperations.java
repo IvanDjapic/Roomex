@@ -16,12 +16,16 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Method that holds all node generating logic
  *
  */
 public class ComplexOperations {
+
+    private static final Logger LOGGER = Logger.getLogger(ComplexOperations.class.getName());
 
     /**
      * Method generates random GUID and then transfers that value to a String representation.
@@ -30,7 +34,10 @@ public class ComplexOperations {
      */
     public static String generateRandomUUIDBase64() {
         UUID uuid = UUID.randomUUID();
-        return uuid.toString();
+        String stringUUID = uuid.toString();
+        LOGGER.log(Level.INFO, "Generated random UUID: {0}", stringUUID);
+
+        return stringUUID;
     }
 
 
@@ -47,12 +54,13 @@ public class ComplexOperations {
             Date start = dateFormat.parse(startDate);
             Date end = dateFormat.parse(endDate);
             long difference = end.getTime() - start.getTime();
+
             // Convert milliseconds to days
             return (int) (difference / (1000 * 60 * 60 * 24));
         } catch (ParseException e) {
             // Handle parsing exception
-            e.printStackTrace();
-            return -1; // Return -1 in case of error
+            LOGGER.log(Level.SEVERE, "Error parsing dates: {0} - {1}", new Object[]{startDate, endDate});
+            throw new IllegalStateException("You need to specify start and and dates correctly! Start: " + startDate + " End: " + endDate);
         }
     }
 
@@ -69,7 +77,10 @@ public class ComplexOperations {
 
         // Encoding the string
         byte[] encodedBytes = customEncoder.encode(messageId.getBytes());
-        return new String(encodedBytes);
+        String encodedMessage = new String(encodedBytes);
+        LOGGER.log(Level.INFO, "Base64 encoded message: {0}", encodedMessage);
+
+        return encodedMessage;
     }
 
 
@@ -90,10 +101,13 @@ public class ComplexOperations {
             String sha1Hash = calculateSHA1(concatenatedString);
 
             // Step 3: Encode SHA-1 hash using Base64
-            return Base64.getEncoder().encodeToString(sha1Hash.getBytes());
+            String encodedPassword = Base64.getEncoder().encodeToString(sha1Hash.getBytes());
+            LOGGER.log(Level.INFO, "Password digested and encoded: {0}", encodedPassword);
+
+            return encodedPassword;
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            LOGGER.log(Level.SEVERE, "Error digesting password: {0}", e.getMessage());
+            throw new IllegalStateException("You need to specify all 3 arguments correctly! nonce = " + nonce + ", created = " + created + ", clearPassword = " + clearPassword);
         }
     }
 
@@ -123,10 +137,11 @@ public class ComplexOperations {
                 stringBuilder.append(String.format("%02x", b));
             }
 
+            LOGGER.log(Level.INFO, "Calculated calculateSHA1");
             return stringBuilder.toString();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
+            LOGGER.log(Level.SEVERE, "Error calculating SHA-1 hash: {0}, {1}", new Object[]{e.getMessage(), e});
+            throw new IllegalStateException("sha1 calculation went wrong. Input = " + input);
         }
     }
 
@@ -143,8 +158,8 @@ public class ComplexOperations {
         // Format the current date and time as a string
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
         String formattedDateTime = currentDateTime.format(formatter);
-
-        return formattedDateTime;
+        LOGGER.log(Level.INFO, "Current date and time formatted as string: {0}", formattedDateTime);
+        return currentDateTime.format(formatter);
     }
 
 
@@ -157,7 +172,9 @@ public class ComplexOperations {
 
         //Since logic how this is formed is not described I have left it here as a hardcoded value,
         // but it can be easily changed since it has its own function now
-        return "UsernameToken-1";
+        String usernameTokenId = "UsernameToken-1";
+        LOGGER.log(Level.INFO, "Username token ID generated: {0}", usernameTokenId);
+        return usernameTokenId;
     }
 
 
@@ -169,7 +186,9 @@ public class ComplexOperations {
      * @return
      */
     public static String getHotelChainCode(String completeCode) {
-        return completeCode.substring(0, 2);
+        String hotelChainCode = completeCode.substring(0, 2);
+        LOGGER.log(Level.INFO, "Hotel chain code extracted: {0}", hotelChainCode);
+        return hotelChainCode;
     }
 
 
@@ -179,7 +198,9 @@ public class ComplexOperations {
      * @return
      */
     public static String getHotelId(String value) {
-        return value.substring(3);
+        String hotelId = value.substring(3);
+        LOGGER.log(Level.INFO, "Hotel ID extracted: {0}", hotelId);
+        return hotelId;
     }
 
 
@@ -234,8 +255,8 @@ public class ComplexOperations {
             dto.setRooms(allRoomsGrouped);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            LOGGER.log(Level.SEVERE, "Error in groupRoomsByAgeAndCapacityPerAge");
+            throw new IllegalStateException("Error in groupRoomsByAgeAndCapacityPerAge");
         }
 
         return  dto;
@@ -260,25 +281,25 @@ public class ComplexOperations {
                     .append("\"/>\n");
         }
 
-        return roomList.toString();
+        String xmlFragment = roomList.toString();
+        LOGGER.log(Level.INFO, "Converted map to XML fragment: {0}", xmlFragment);
+        return xmlFragment;
     }
 
 
     /**
      * Method takes input XML and calls another method that calculates rooms statistics
      * @return DTO that holds all relevant rooms data
-     * @throws IOException
      */
-    public static BedroomsDto calculateRoomsData() throws IOException {
+    public static BedroomsDto calculateRoomsData() {
 
-        // First load input XML data to calculate room output section
-        FileInputStream inputXmlStream = new FileInputStream("src/main/resources/input.xml");
-        // Do the calculation
-        BedroomsDto dto = ComplexOperations.groupRoomsByAgeAndCapacityPerAge(inputXmlStream);
-        // Close the input stream
-        inputXmlStream.close();
+        try (FileInputStream inputXmlStream = new FileInputStream("src/main/resources/input.xml")) {
 
-        return dto;
+            return ComplexOperations.groupRoomsByAgeAndCapacityPerAge(inputXmlStream);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error calculating rooms data: {0}", e.getMessage());
+            throw new IllegalStateException("Error in calculateRoomsData(). Msg = " + e.getMessage());
+        }
     }
 
 
@@ -295,6 +316,9 @@ public class ComplexOperations {
         sb.append(host);
         sb.append("/");
         sb.append(endPoint);
-        return sb.toString();
+
+        String url = sb.toString();
+        LOGGER.log(Level.INFO, "URL formed for message sending: {0}", url);
+        return url;
     }
 }
