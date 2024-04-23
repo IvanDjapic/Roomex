@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+&lt;room numberOfRooms="3" numberOfAdults="1"/&gt;
+&lt;room numberOfRooms="1" numberOfAdults="2"/&gt;
+&lt;room numberOfRooms="2" numberOfAdults="3"/&gt;
