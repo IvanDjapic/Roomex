@@ -16,16 +16,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import java.util.Map;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.StringWriter;
 
-
+/**
+ * Method that holds all node generating logic
+ *
+ */
 public class ComplexOperations {
 
     /**
-     * Method generates random GUID and then transfers it to a String representation.
+     * Method generates random GUID and then transfers that value to a String representation.
      *
      * @return Returns java.util.UUID as String
      */
@@ -33,6 +32,7 @@ public class ComplexOperations {
         UUID uuid = UUID.randomUUID();
         return uuid.toString();
     }
+
 
     /**
      * Method calculates number of nights as integer value per given start and end date
@@ -57,6 +57,11 @@ public class ComplexOperations {
     }
 
 
+    /**
+     * Method encodes in base64 format a given input value
+     * @param messageId given input value
+     * @return String value that holds base64 encoded input value
+     */
     public static String base64Encode(String messageId) {
 
         // Custom encoder
@@ -67,11 +72,19 @@ public class ComplexOperations {
         return new String(encodedBytes);
     }
 
-    public static <DateTime> String digestPassword(String nonce, DateTime created, String clearPassword) {
+
+    /**
+     * Method that forms password digest based on rules specified in Input.xml
+     * @param nonce first argument - marks a nonce
+     * @param created second argument - marks current timestamp as a string value
+     * @param clearPassword third argument - marks a clear password value from input.xml
+     * @return
+     */
+    public static  String digestPassword(String nonce,  String created, String clearPassword) {
 
         try {
             // Step 1: Concatenate nonce, created, and the SHA-1 hash of clearPassword
-            String concatenatedString = nonce + created.toString() + calculateSHA1(clearPassword);
+            String concatenatedString = nonce + created + calculateSHA1(clearPassword);
 
             // Step 2: Calculate SHA-1 hash of the concatenated string
             String sha1Hash = calculateSHA1(concatenatedString);
@@ -85,6 +98,11 @@ public class ComplexOperations {
     }
 
 
+    /**
+     * Calculates sha1 value for a given input
+     * @param input String value as an input
+     * @return sha1 value as String
+     */
     private static String calculateSHA1(String input) {
         try {
             // Create MessageDigest instance for SHA-1
@@ -112,6 +130,11 @@ public class ComplexOperations {
         }
     }
 
+
+    /**
+     * Converts current date time in some given format to a string
+     * @return Formatted string
+     */
     public static String getCurrentDateTimeAsString() {
 
         // Get the current date and time
@@ -124,8 +147,11 @@ public class ComplexOperations {
         return formattedDateTime;
     }
 
+
     /**
-     * @return
+     * This method should form username token id - for now it holds only hardcoded value since the true logic is
+     * unknown to me so this has a purpose to hold future implementation if needed
+     * @return value as a String
      */
     public static String calculateUsernameTokenId() {
 
@@ -134,8 +160,10 @@ public class ComplexOperations {
         return "UsernameToken-1";
     }
 
+
     /**
-     * Method that parses only first 2 letters of the given string that corespond to the hotel chain code
+     * Method that parses only first 2 letters of the given string that correspond to the hotel chain code.
+     * Assumption is that string has that value at exact position.
      *
      * @param completeCode
      * @return
@@ -144,21 +172,29 @@ public class ComplexOperations {
         return completeCode.substring(0, 2);
     }
 
+
+    /**
+     * Method extracts hotel id from a given string assuming string has that value at exact position.
+     * @param value
+     * @return
+     */
     public static String getHotelId(String value) {
         return value.substring(3);
     }
 
+
     /**
+     * Method that holds the logic on how to extract room data from an input xml into an output xml.
+     * For each step look at line comments inside the method.
      *
-     * @param xmlSource
-     * @return
+     * @param inputStream stream that holds a reference to the input xml
+     * @return DTO that has all relevant rooms data
      */
     public static BedroomsDto groupRoomsByAgeAndCapacityPerAge(InputStream inputStream) {
 
         BedroomsDto dto = new BedroomsDto();
 
         try {
-
             // Parse the input XML stream and create a Document object
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -171,13 +207,18 @@ public class ComplexOperations {
             NodeList entryNodes = inputDoc.getElementsByTagName("ota:GuestCount");
             for (int i = 0; i < entryNodes.getLength(); i++) {
 
+                //Extract per element data (age code and count value)
                 Element entryElement = (Element) entryNodes.item(i);
                 String ageQualifyingCode = entryElement.getAttribute("AgeQualifyingCode");
                 String count = entryElement.getAttribute("Count");
 
+                //If the value is '8' then we have a child room in question - only increase the counter for child rooms
                 if ("8".equals(ageQualifyingCode)) {
                    dto.setNumberOfChildren(dto.getNumberOfChildren() + Integer.parseInt(count));
-                } else if ("10".equals(ageQualifyingCode)) {
+                }
+                //If age code is = '10' we have an adult room in question.
+                // Increase appropriate map position for that room size
+                else if ("10".equals(ageQualifyingCode)) {
                     if (!allRoomsGrouped.containsKey(count)) {
                         allRoomsGrouped.put(count, 1);
                     }
@@ -187,9 +228,9 @@ public class ComplexOperations {
                 }
             }
 
-            //Calculate unique rooms number
+            //Calculate unique room numbers
             dto.setUniqueRoomGroups(allRoomsGrouped.size());
-            //Copy over calculated data to the DTO
+            //Copy over calculated data (to the return DTO)
             dto.setRooms(allRoomsGrouped);
 
         } catch (Exception e) {
@@ -200,6 +241,13 @@ public class ComplexOperations {
         return  dto;
     }
 
+    /**
+     * Since we use XSLT 1.0 custom XML creation method was needed to form a fragment of output.xml document that holds
+     * rooms data. This method generates XML fragment from scratch using Java and fills in the necessary data so that
+     * the result of the construction can be pasted straight into the output.xml .
+     * @param map structure that has all adult rooms grouped by capacity
+     * @return XML document that is ready to be pasted into the output.xml
+     */
     public  static String convertMapToXml(Map<String, Integer> map) {
 
         StringBuilder roomList = new StringBuilder();
@@ -215,6 +263,12 @@ public class ComplexOperations {
         return roomList.toString();
     }
 
+
+    /**
+     * Method takes input XML and calls another method that calculates rooms statistics
+     * @return DTO that holds all relevant rooms data
+     * @throws IOException
+     */
     public static BedroomsDto calculateRoomsData() throws IOException {
 
         // First load input XML data to calculate room output section
@@ -228,25 +282,12 @@ public class ComplexOperations {
     }
 
 
-    public static String convertToXml(Map<String, Integer> map, String rootElementName) {
-        StringBuilder xml = new StringBuilder();
-        xml.append("<").append(rootElementName).append(">");
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            xml.append("<").append(key).append(">").append(value).append("</").append(key).append(">");
-        }
-        xml.append("</").append(rootElementName).append(">");
-        return xml.toString();
-    }
-
-
     /**
      * Method forms URL value based on given host and endpoint values.
      *
-     * @param host
-     * @param endPoint
-     * @return
+     * @param host value for the host
+     * @param endPoint value for the endpoint
+     * @return String that carries a correct URL value
      */
     public static String formURLForMessageSending(String host, String endPoint) {
 
