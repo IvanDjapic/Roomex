@@ -40,7 +40,6 @@ public class ComplexOperations {
         return stringUUID;
     }
 
-
     /**
      * Method calculates number of nights as integer value per given start and end date
      *
@@ -71,6 +70,9 @@ public class ComplexOperations {
      * @return String value that holds base64 encoded input value
      */
     public static String base64Encode(String messageId) {
+
+        if(messageId == null)
+            throw new IllegalStateException("Message Id can not be null");
 
         // Custom encoder
         Base64.Encoder customEncoder = Base64.getEncoder().withoutPadding(); // You can customize padding
@@ -117,7 +119,11 @@ public class ComplexOperations {
      * @param input String value as an input
      * @return sha1 value as String
      */
-    private static String calculateSHA1(String input) {
+    static String calculateSHA1(String input) {
+
+        if(input == null)
+            throw new IllegalStateException("Input can not be null!");
+
         try {
             // Create MessageDigest instance for SHA-1
             MessageDigest sha1Digest = MessageDigest.getInstance("SHA-1");
@@ -262,6 +268,7 @@ public class ComplexOperations {
         return  dto;
     }
 
+
     /**
      * Since we use XSLT 1.0 custom XML creation method was needed to form a fragment of output.xml document that holds
      * rooms data. This method generates XML fragment from scratch using Java and fills in the necessary data so that
@@ -270,6 +277,9 @@ public class ComplexOperations {
      * @return XML document that is ready to be pasted into the output.xml
      */
     public  static String convertMapToXml(Map<String, Integer> map) {
+
+        if(map == null)
+            throw new IllegalStateException("Map can not be null!");
 
         StringBuilder roomList = new StringBuilder();
         roomList.append("\n");
@@ -288,13 +298,12 @@ public class ComplexOperations {
 
 
     /**
-     * Method takes input XML and calls another method that calculates rooms statistics
+     * Method opens input.xml so that another method can calculate rooms statistics
      * @return DTO that holds all relevant rooms data
      */
     public static BedroomsDto calculateRoomsData() {
 
         try (FileInputStream inputXmlStream = new FileInputStream("src/main/resources/input.xml")) {
-
             return ComplexOperations.groupRoomsByAgeAndCapacityPerAge(inputXmlStream);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error calculating rooms data: {0}", e.getMessage());
