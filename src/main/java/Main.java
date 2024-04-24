@@ -14,14 +14,14 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String outputXmlPath = "src/main/resources/output.xml";
-
         try {
-            LOGGER.log(Level.INFO, "Started the process of creating an output.xml");
+
+            validateInputArguments(args);
+
             // Load input XML
-            Source inputXml = new StreamSource(new File("src/main/resources/input.xml"));
+            Source inputXml = new StreamSource(new File(Constants.ResourceLocation + args[0]));
             // Load XSLT stylesheet
-            Source xslt = new StreamSource(new File("src/main/resources/transform.xsl"));
+            Source xslt = new StreamSource(new File(Constants.ResourceLocation + "transform.xsl"));
 
             // Create a transformer
             TransformerFactory factory = TransformerFactory.newInstance();
@@ -41,9 +41,24 @@ public class Main {
             transformer.setParameter("roomsMap", xmlString);
 
             // Perform the transformation
-            transformer.transform(inputXml, new StreamResult(new File(outputXmlPath)));
-        } catch(Exception e ){
+            transformer.transform(inputXml, new StreamResult(new File(Constants.ResourceLocation + args[1])));
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error creating XML: {0}", e.getMessage());
         }
+    }
+
+    private static void validateInputArguments(String... args){
+
+        if (args == null || args.length < 2) {
+            LOGGER.log(Level.SEVERE, "Could not parse input arguments!");
+            throw new IllegalStateException("Not enough input arguments!");
+        }
+        for (String arg : args) {
+            if (!arg.endsWith(".xml")) {
+                LOGGER.log(Level.SEVERE, "Not a valid xml name!");
+                throw new IllegalStateException("Not a valid xml name!");
+            }
+        }
+
     }
 }
