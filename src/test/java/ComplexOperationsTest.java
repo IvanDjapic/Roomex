@@ -1,33 +1,24 @@
 import mockit.*;
 import org.junit.jupiter.api.Test;
-import java.io.*;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import mockit.Mock;
 import mockit.MockUp;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.UUID;
 import mockit.Expectations;
 import mockit.Mocked;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import mockit.Expectations;
-import mockit.Mocked;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
