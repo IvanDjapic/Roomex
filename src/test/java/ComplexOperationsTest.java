@@ -9,12 +9,49 @@ import mockit.Mock;
 import mockit.MockUp;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.UUID;
+import mockit.Expectations;
+import mockit.Mocked;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.rules.ExpectedException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import mockit.Expectations;
+import mockit.Mocked;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ComplexOperationsTest {
+
+    @Injectable
+    ComplexOperations complexOperations;
+
+
     @Test
     void generateRandomUUIDBase64_shouldGenerateUUID() {
         String uuid = ComplexOperations.generateRandomUUIDBase64();
         assertNotNull(uuid);
+    }
+
+    @Test
+    void generateRandomUUIDBase64_shouldGenerateRandomUUIDCorrectly_anotherCorrectScenario() {
+
+        String expectedResult = UUID.randomUUID().toString();
+
+        String actualResult = ComplexOperations.generateRandomUUIDBase64();
+
+        assertNotNull(actualResult);
+        assertNotEquals(expectedResult, actualResult);
     }
 
 
@@ -144,6 +181,64 @@ public class ComplexOperationsTest {
         BedroomsDto dto = ComplexOperations.calculateRoomsData();
         assertNotNull(dto);
     }
+
+    @Test
+    void testCalculateRoomsData_shouldFailOnGroupRoomsByAgeAndCapacityPerAge() throws IOException {
+        new MockUp<ComplexOperations>() {
+            @Mock
+            BedroomsDto groupRoomsByAgeAndCapacityPerAge(InputStream inputStream) throws IOException {
+                throw new IOException("Mocked IOException");
+            }
+        };
+
+        assertThrows(IllegalStateException.class, ComplexOperations::calculateRoomsData);
+    }
+
+    @Test
+    void testGroupRoomsByAgeAndCapacityPerAge_shouldReturnSuccess(@Mocked DocumentBuilderFactory documentBuilderFactory,
+                                                                  @Mocked DocumentBuilder documentBuilder,
+                                                                  @Mocked Document document,
+                                                                  @Mocked Element element,
+                                                                  @Mocked NodeList nodeList) throws Exception {
+
+        String xmlContent = "<ota:GuestCount AgeQualifyingCode=\"8\" Count=\"2\"/><ota:GuestCount AgeQualifyingCode=\"10\" Count=\"1\"/>";
+        InputStream inputStream = new ByteArrayInputStream(xmlContent.getBytes());
+
+        new Expectations() {{
+
+            documentBuilderFactory.newDocumentBuilder();
+            result = documentBuilder;
+
+            documentBuilder.parse(inputStream);
+            result = document;
+
+            document.getElementsByTagName("ota:GuestCount");
+            result = nodeList;
+
+            nodeList.getLength();
+            result = 2;
+
+            nodeList.item(0);
+            result = element;
+            nodeList.item(1);
+            result = element;
+
+            element.getAttribute("AgeQualifyingCode");
+            returns("8", "10");
+
+            element.getAttribute("Count");
+            returns("2", "1");
+        }};
+
+        BedroomsDto result = ComplexOperations.groupRoomsByAgeAndCapacityPerAge(inputStream);
+
+        assertEquals(2, result.getNumberOfChildren());
+        assertEquals(1, result.getUniqueRoomGroups());
+        Map<String, Integer> expectedRooms = new HashMap<>();
+        expectedRooms.put("1", 1);
+        assertEquals(expectedRooms, result.getRooms());
+    }
+
 
 
     @Test
