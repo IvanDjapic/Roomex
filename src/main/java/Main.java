@@ -16,32 +16,19 @@ public class Main {
 
         try {
 
+            //Check did we get the correct input arguments
             validateInputArguments(args);
 
-            // Load input XML
-            Source inputXml = new StreamSource(new File(Constants.ResourceLocation + args[0]));
-            // Load XSLT stylesheet
-            Source xslt = new StreamSource(new File(Constants.ResourceLocation + "transform.xsl"));
+            //Pick a transformation - in out case it is Client A, but this can be,
+            // for example CLIENT - SERVICE architecture  where we extract client type from the request
+            // Parameter decides the instance which Factory produces
+            TransformationStrategy strategy = TransformationFactory.getTransformationStrategyForClient("ClientA");
 
-            // Create a transformer
-            TransformerFactory factory = TransformerFactory.newInstance();
-            Transformer transformer = factory.newTransformer(xslt);
+            //Set a context so that we can call the correct
+            TransformationContext context = new TransformationContext();
+            context.setStrategy(strategy);
+            context.executeTransformation(args[0], args[1]);
 
-            //Calculate bedrooms data
-            BedroomsDto dto = ComplexOperations.calculateRoomsData();
-            //Form XML fragment for bedrooms data - since we use XSLT 1.0
-            String xmlString = ComplexOperations.convertMapToXml(dto.getRooms());
-
-            // Set the parameter values
-            transformer.setParameter("userNameTokenId", ComplexOperations.calculateUsernameTokenId());
-            transformer.setParameter("encodingType", Constants.EncodingType);
-            transformer.setParameter("type", Constants.Type);
-            transformer.setParameter("uniqueRoomGroups", dto.getUniqueRoomGroups());
-            transformer.setParameter("numberOfChildren", dto.getNumberOfChildren());
-            transformer.setParameter("roomsMap", xmlString);
-
-            // Perform the transformation
-            transformer.transform(inputXml, new StreamResult(new File(Constants.ResourceLocation + args[1])));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error creating XML: {0}", e.getMessage());
         }
