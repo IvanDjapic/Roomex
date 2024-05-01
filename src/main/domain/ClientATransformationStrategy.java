@@ -21,13 +21,11 @@ public class ClientATransformationStrategy implements TransformationStrategy {
             // Load input XML
             Source inputXml = new StreamSource(new File(Constants.ResourceLocation + inputXmlPath));
             // Load XSLT stylesheet
-            Source xslt = new StreamSource(new File(Constants.ResourceLocation + "transform.xsl"));
+            Source xslt = new StreamSource(new File(Constants.ResourceLocation.toString() + Constants.TransformFileName.toString()));
 
             // Create a transformer
             TransformerFactory factory = TransformerFactory.newInstance();
-            Transformer transformer = null;
-
-            transformer = factory.newTransformer(xslt);
+            Transformer transformer = factory.newTransformer(xslt);
 
             //Calculate bedrooms data
             BedroomsDto dto = ComplexOperations.calculateRoomsData();

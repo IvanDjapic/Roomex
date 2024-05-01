@@ -7,9 +7,13 @@ public class TransformationContext {
     }
 
     public void executeTransformation(String inputXmlPath, String outputXmlPath) {
+
         if (strategy == null) {
             throw new IllegalStateException("Transformation strategy is not set.");
         }
+
+        Validation.validateArgsValue(new String[]{inputXmlPath, outputXmlPath});
+
         strategy.transform(inputXmlPath, outputXmlPath);
     }
 

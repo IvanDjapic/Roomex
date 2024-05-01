@@ -174,7 +174,7 @@ public class ComplexOperationsTest {
     }
 
     @Test
-    void testCalculateRoomsData_shouldFailOnGroupRoomsByAgeAndCapacityPerAge() throws IOException {
+    void calculateRoomsData_shouldFailOnGroupRoomsByAgeAndCapacityPerAge() throws IOException {
         new MockUp<ComplexOperations>() {
             @Mock
             BedroomsDto groupRoomsByAgeAndCapacityPerAge(InputStream inputStream) throws IOException {

@@ -11,7 +11,7 @@ public class Main {
         try {
 
             //Check did we get the correct input arguments
-            validateInputArguments(args);
+            Validation.validateArgsValue(args);
 
             //Pick a transformation - in out case it is Client A, but this can be,
             // for example CLIENT - SERVICE architecture  where we extract client type from the request
@@ -26,20 +26,5 @@ public class Main {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error creating XML: {0}", e.getMessage());
         }
-    }
-
-    private static void validateInputArguments(String... args){
-
-        if (args == null || args.length < 2) {
-            LOGGER.log(Level.SEVERE, "Could not parse input arguments!");
-            throw new IllegalStateException("Not enough input arguments!");
-        }
-        for (String arg : args) {
-            if (!arg.endsWith(".xml")) {
-                LOGGER.log(Level.SEVERE, "Not a valid xml name!");
-                throw new IllegalStateException("Not a valid xml name!");
-            }
-        }
-
     }
 }
