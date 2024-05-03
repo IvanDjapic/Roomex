@@ -24,11 +24,8 @@
     <xsl:param name="userNameTokenId"/>
     <xsl:param name="encodingType"/>
     <xsl:param name="type"/>
-    <xsl:param name="bedroomsXml"/>
-    <xsl:param name="map"/>
     <xsl:param name="uniqueRoomGroups"/>
     <xsl:param name="numberOfChildren"/>
-
     <xsl:param name="roomsMap"/>
 
 
